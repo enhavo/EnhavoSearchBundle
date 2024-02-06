@@ -9,13 +9,16 @@
 namespace Enhavo\Bundle\SearchBundle\Filter;
 
 
-class FilterData
+class FilterField
 {
+    const FIELD_TYPE_STRING = 'string';
+    const FIELD_TYPE_DATE = 'date';
+
     public function __construct(
         private string $key,
-        private string $value,
-    ) {
-
+        private string $fieldType,
+    )
+    {
     }
 
     public function getKey(): string
@@ -23,8 +26,8 @@ class FilterData
         return $this->key;
     }
 
-    public function getValue(): string
+    public function getFieldType(): string
     {
-        return $this->value;
+        return $this->fieldType;
     }
 }
