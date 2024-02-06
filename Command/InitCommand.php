@@ -9,7 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /*
  * This command does the reindexing
  */
-class IndexCommand extends Command
+class InitCommand extends Command
 {
     public function __construct(
         private SearchEngineInterface $searchEngine,
@@ -21,16 +21,15 @@ class IndexCommand extends Command
     protected function configure()
     {
         $this
-            ->setName('enhavo:search:index')
-            ->setDescription('Runs search (re)index')
+            ->setName('enhavo:search:init')
+            ->setDescription('Runs search init')
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->writeln('Start reindexing');
-        $this->searchEngine->reindex();
-        $output->writeln('Indexing finished');
+        $output->writeln('Start init');
+        $this->searchEngine->initialize();
         return Command::SUCCESS;
     }
 }
