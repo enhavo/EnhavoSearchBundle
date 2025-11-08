@@ -12,9 +12,11 @@
 namespace Enhavo\Bundle\SearchBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Enhavo\Bundle\ResourceBundle\Resource\ResourceManager;
 use Enhavo\Bundle\SearchBundle\Filter\FilterDataProvider;
 use Enhavo\Bundle\SearchBundle\Index\IndexDataProvider;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -27,6 +29,7 @@ class AnalyzeCommand extends Command
         private IndexDataProvider $indexDataProvider,
         private FilterDataProvider $filterDataProvider,
         private EntityManagerInterface $em,
+        private ResourceManager $resourceManager,
     ) {
         parent::__construct();
     }
@@ -36,21 +39,35 @@ class AnalyzeCommand extends Command
         $this
             ->setName('debug:search:analyze')
             ->setDescription('Check index metadata')
-            ->addArgument('class')
-            ->addArgument('id')
+            ->addArgument('entity', InputArgument::REQUIRED, 'FQCN or resource name')
+            ->addArgument('id', InputArgument::REQUIRED, 'id of the entity')
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $class = $input->getArgument('class');
+        $entityName = $input->getArgument('entity');
         $id = $input->getArgument('id');
 
-        $entity = $this->em->getRepository($class)->find($id);
+        $entity = null;
+        if (class_exists($entityName)) {
+            $repository = $this->em->getRepository($entity);
+            $entity = $repository->find($id);
+        } elseif ($this->resourceManager->getMetadata($entityName)) {
+            $repository = $this->resourceManager->getRepository($entityName);
+            $entity = $repository->find($id);
+        } else {
+            $output->writeln('<error>Entity "'.$entityName.'" is not a FCQN nor a valid resource name</error>');
+            return Command::FAILURE;
+        }
+
+        if ($entity === null) {
+            $output->writeln('<error>Entity with id "'.$id.'" not found</error>');
+            return Command::FAILURE;
+        }
 
         if (null === $entity) {
             $output->writeln('Entity not found');
-
             return Command::FAILURE;
         }
 
